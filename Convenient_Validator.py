@@ -3,6 +3,7 @@ import pyotp
 import tkinter as tk
 from tkinter import ttk, messagebox
 import json
+import sys
 import os
 from pathlib import Path
 
@@ -13,8 +14,17 @@ class TOTPManagerPro:
         self.root.geometry("800x600")
         self.root.minsize(600, 400)  # 最小尺寸
         
-        # 配置文件路径
-        self.config_file = Path(__file__).parent / "accounts.json"
+        # 配置文件路径 - 修复打包后的路径问题
+        if getattr(sys, 'frozen', False):
+            # 如果是打包后的exe，配置文件放在exe所在目录
+            application_path = os.path.dirname(sys.executable)
+        else:
+            # 如果是python脚本，配置文件放在脚本所在目录
+            application_path = os.path.dirname(os.path.abspath(__file__))
+        
+        self.config_file = Path(application_path) / "accounts.json"
+        print(f"[INFO] 程序路径: {application_path}")
+        print(f"[INFO] 配置文件: {self.config_file}")
         
         # 数据
         self.accounts = []
@@ -42,26 +52,49 @@ class TOTPManagerPro:
     
     def load_accounts(self):
         """从配置文件加载账户信息"""
-        if not self.config_file.exists():
-            # 创建示例配置文件
+        # 调试信息：显示配置文件路径和状态
+        file_exists = self.config_file.exists()
+        print(f"[DEBUG] 配置文件路径: {self.config_file}")
+        print(f"[DEBUG] 文件是否存在: {file_exists}")
+        
+        if not file_exists:
+            # 创建示例配置文件（仅首次运行）
             example_accounts = [
-                {"name": "Google账户", "secret": "JBSWY3DPEHPK3PXP", "group": "工作"},
-                {"name": "GitHub", "secret": "HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", "group": "工作"},
-                {"name": "微信", "secret": "", "group": "社交"},
-                {"name": "支付宝", "secret": "", "group": "金融"},
-                {"name": "银行账户", "secret": "", "group": "金融"},
+                {"name": "示例-Google", "secret": "JBSWY3DPEHPK3PXP", "group": "工作"},
+                {"name": "示例-GitHub", "secret": "HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", "group": "工作"},
+                {"name": "示例-微信", "secret": "", "group": "社交"},
+                {"name": "示例-支付宝", "secret": "", "group": "金融"},
             ]
-            self.save_accounts(example_accounts)
-            self.accounts = example_accounts
-            messagebox.showinfo(
-                "首次运行",
-                f"已创建配置文件：\n{self.config_file}\n\n请编辑此文件添加你的账户信息。"
-            )
+            try:
+                self.save_accounts(example_accounts)
+                self.accounts = example_accounts
+                print(f"[DEBUG] 已创建示例配置文件")
+                messagebox.showinfo(
+                    "首次运行",
+                    f"已创建示例配置文件：\n{self.config_file}\n\n请编辑此文件添加你的真实账户信息。"
+                )
+            except Exception as e:
+                print(f"[DEBUG] 创建配置失败: {e}")
+                messagebox.showerror("错误", f"创建配置文件失败：\n{e}")
+                self.accounts = []
         else:
+            # 文件存在，直接读取
+            print(f"[DEBUG] 开始读取现有配置文件...")
             try:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
-                    self.accounts = json.load(f)
+                    loaded_data = json.load(f)
+                    # 确保加载的是列表
+                    if isinstance(loaded_data, list):
+                        self.accounts = loaded_data
+                        print(f"[DEBUG] 成功读取 {len(self.accounts)} 个账户")
+                    else:
+                        raise ValueError("配置文件格式错误：应该是一个账户列表")
+            except json.JSONDecodeError as e:
+                print(f"[DEBUG] JSON格式错误: {e}")
+                messagebox.showerror("错误", f"配置文件JSON格式错误：\n{e}\n\n请检查文件格式是否正确。")
+                self.accounts = []
             except Exception as e:
+                print(f"[DEBUG] 读取失败: {e}")
                 messagebox.showerror("错误", f"读取配置文件失败：\n{e}")
                 self.accounts = []
         
@@ -653,11 +686,24 @@ class TOTPManagerPro:
     
     def reload_accounts(self):
         """重新加载账户"""
+        # 保存当前页码
+        old_page = self.current_page
+        
         self.load_accounts()
         self.group_combo['values'] = list(self.groups.keys())
         self.update_group_list()
-        self.show_page(0)
-        messagebox.showinfo("成功", "已重新加载配置文件")
+        
+        # 尝试恢复页码
+        total_pages = (len(self.filtered_accounts) - 1) // self.items_per_page + 1 if self.filtered_accounts else 1
+        new_page = min(old_page, total_pages - 1) if total_pages > 0 else 0
+        
+        self.show_page(new_page)
+        
+        # 显示加载的账户数量
+        messagebox.showinfo(
+            "重新加载成功", 
+            f"已从配置文件加载 {len(self.accounts)} 个账户\n分组数量: {len(self.groups) - 1}"  # -1 是因为"全部"不算真实分组
+        )
     
     def open_config(self):
         """打开配置文件"""
