@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Google账户",
+    "secret": "JBSWY3DPEHPK3PXP",
+    "group": "工作"
+  },
+  {
+    "name": "GitHub",
+    "secret": "HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ",
+    "group": "工作"
+  },
+  {
+    "name": "微信",
+    "secret": "",
+    "group": "社交"
+  },
+  {
+    "name": "支付宝",
+    "secret": "",
+    "group": "金融"
+  },
+  {
+    "name": "银行账户",
+    "secret": "",
+    "group": "金融"
+  }
+]
