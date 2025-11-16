@@ -273,3 +273,8 @@ A: 点击搜索框右侧的"✕"按钮，或删除搜索框内容。
 ---
 
 **享受更强大的 TOTP 管理体验！** 🎉
+
+
+### 使用页面功能储存地方是打开F12浏览器的本地缓存的清理换成的时候记得导出哦
+<img width="1270" height="790" alt="image" src="https://github.com/user-attachments/assets/da83396a-9ee5-46db-a718-bc90fd2568f6" />
+
