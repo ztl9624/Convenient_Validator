@@ -33,11 +33,14 @@
             border-right: 1px solid #374151;
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid #374151;
+            flex-shrink: 0;
         }
         
         .sidebar-title {
@@ -51,7 +54,24 @@
         .group-list {
             flex: 1;
             overflow-y: auto;
-            max-height: calc(100vh - 60px);
+            padding: 4px 0;
+        }
+        
+        .group-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .group-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .group-list::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 2px;
+        }
+        
+        .group-list::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
         }
         
         .group-item {
@@ -85,6 +105,7 @@
             width: 4px;
             background: #374151;
             cursor: col-resize;
+            flex-shrink: 0;
         }
         
         .resizer:hover, .resizer.dragging {
@@ -97,6 +118,7 @@
             flex-direction: column;
             min-width: 0;
             height: 100vh;
+            overflow: hidden;
         }
         
         .top-bar {
@@ -222,6 +244,23 @@
             overflow-y: auto;
             padding: 20px;
             min-height: 0;
+        }
+        
+        .accounts-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .accounts-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .accounts-container::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        
+        .accounts-container::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
         }
         
         .card {
@@ -444,79 +483,13 @@
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
-                height: 100vh;
-                overflow: hidden;
             }
-            
             .sidebar {
                 width: 100%;
-                height: 200px;
                 max-height: 200px;
-                flex-shrink: 0;
-                overflow: hidden;
             }
-            
-            .group-list {
-                flex: 1;
-                overflow-y: auto;
-                height: calc(100% - 60px); /* 减去header高度 */
-            }
-            
             .resizer {
                 display: none;
-            }
-            
-            .main-content {
-                flex: 1;
-                min-height: 0;
-                overflow: hidden;
-                height: calc(100vh - 200px); /* 减去sidebar高度 */
-            }
-            
-            .accounts-container {
-                flex: 1;
-                overflow-y: auto;
-                height: 100%;
-                padding: 10px;
-            }
-            
-            .top-bar {
-                padding: 12px 15px;
-            }
-            
-            .header h1 {
-                font-size: 20px;
-            }
-            
-            .toolbar {
-                gap: 6px;
-            }
-            
-            .btn {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-            
-            .stats-bar {
-                padding: 8px 12px;
-                font-size: 12px;
-                margin: 8px 0;
-            }
-            
-            .card {
-                padding: 12px;
-                margin-bottom: 8px;
-            }
-            
-            .card-code {
-                font-size: 24px;
-                padding: 12px;
-                letter-spacing: 2px;
-            }
-            
-            .modal-content {
-                margin: 10px;
-                padding: 20px;
             }
         }
     </style>
@@ -613,6 +586,39 @@
         let editingIndex = -1;
         let codes = {};
         
+        // 初始化一些测试数据来演示滚动
+        function initTestData() {
+            if (accounts.length === 0) {
+                // 添加一些测试分组和数据
+                const testGroups = ['工作', '个人', '社交', '金融', '游戏', '其他', '开发', '测试'];
+                const testAccounts = [
+                    {name: 'Google', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'GitHub', secret: 'JBSWY3DPEHPK3PXP', group: '开发'},
+                    {name: 'Outlook', secret: 'JBSWY3DPEHPK3PXP', group: '个人'},
+                    {name: 'Facebook', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: 'Twitter', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: '银行', secret: 'JBSWY3DPEHPK3PXP', group: '金融'},
+                    {name: '支付宝', secret: 'JBSWY3DPEHPK3PXP', group: '金融'},
+                    {name: 'Steam', secret: 'JBSWY3DPEHPK3PXP', group: '游戏'},
+                    {name: 'Epic Games', secret: 'JBSWY3DPEHPK3PXP', group: '游戏'},
+                    {name: 'AWS', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Azure', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Discord', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: 'Slack', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Trello', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Dropbox', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Evernote', secret: 'JBSWY3DPEHPK3PXP', group: '个人'},
+                    {name: 'LastPass', secret: 'JBSWY3DPEHPK3PXP', group: '个人'},
+                    {name: 'PayPal', secret: 'JBSWY3DPEHPK3PXP', group: '金融'},
+                    {name: '微信', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: 'QQ', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                ];
+                
+                accounts.push(...testAccounts);
+                saveAccounts();
+            }
+        }
+        
         // Base32 解码函数
         function base32Decode(base32) {
             const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -646,8 +652,8 @@
                 
                 // 计算时间步长
                 const timeStep = 30;
-                const timestamp = Math.floor(Date.now() / 1000);
-                const counter = Math.floor(timestamp / timeStep) + window;
+                let timestamp = Math.floor(Date.now() / 1000);
+                let counter = Math.floor(timestamp / timeStep) + window;
                 
                 // 将计数器转换为 8 字节数组
                 const counterBytes = new Array(8);
@@ -682,25 +688,10 @@
         
         function init() {
             loadAccounts();
-            initTestData();
+            initTestData(); // 初始化测试数据
             renderUI();
             startUpdate();
             initResizer();
-            
-            // 移动端优化
-            if (window.innerWidth <= 768) {
-                optimizeForMobile();
-            }
-        }
-
-        function optimizeForMobile() {
-            // 确保移动端滚动顺畅
-            document.body.style.webkitOverflowScrolling = 'touch';
-            
-            // 调整初始分组选择
-            if (accounts.length > 0) {
-                selectGroup('全部');
-            }
         }
         
         function loadAccounts() {
@@ -1041,7 +1032,6 @@
             const sidebar = document.getElementById('sidebar');
             let isResizing = false;
             
-            // 桌面端鼠标事件
             resizer.addEventListener('mousedown', (e) => {
                 isResizing = true;
                 resizer.classList.add('dragging');
@@ -1060,28 +1050,6 @@
                     isResizing = false;
                     resizer.classList.remove('dragging');
                     document.body.style.cursor = 'default';
-                }
-            });
-            
-            // 移动端触摸事件
-            resizer.addEventListener('touchstart', (e) => {
-                if (window.innerWidth <= 768) return; // 移动端不调整侧边栏宽度
-                isResizing = true;
-                resizer.classList.add('dragging');
-                e.preventDefault();
-            });
-            
-            document.addEventListener('touchmove', (e) => {
-                if (!isResizing || window.innerWidth <= 768) return;
-                const touch = e.touches[0];
-                const newWidth = Math.max(200, Math.min(400, touch.clientX));
-                sidebar.style.width = newWidth + 'px';
-            });
-            
-            document.addEventListener('touchend', () => {
-                if (isResizing) {
-                    isResizing = false;
-                    resizer.classList.remove('dragging');
                 }
             });
         }
