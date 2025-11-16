@@ -483,13 +483,96 @@
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
             }
+            
             .sidebar {
                 width: 100%;
+                height: 200px;
                 max-height: 200px;
+                flex-shrink: 0;
+                border-right: none;
+                border-bottom: 1px solid #374151;
             }
+            
+            .group-list {
+                flex: 1;
+                overflow-y: auto;
+                height: calc(100% - 60px);
+                -webkit-overflow-scrolling: touch;
+            }
+            
             .resizer {
                 display: none;
+            }
+            
+            .main-content {
+                flex: 1;
+                min-height: 0;
+                overflow: hidden;
+                height: calc(100vh - 200px);
+            }
+            
+            .accounts-container {
+                flex: 1;
+                overflow-y: auto;
+                height: 100%;
+                padding: 15px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .top-bar {
+                padding: 12px 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+                margin-bottom: 2px;
+            }
+            
+            .toolbar {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                flex: 1;
+            }
+            
+            .stats-bar {
+                padding: 8px 12px;
+                font-size: 12px;
+                margin: 8px 0;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .card {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+            
+            .card-code {
+                font-size: 24px;
+                padding: 12px;
+                letter-spacing: 2px;
+            }
+            
+            .modal-content {
+                margin: 10px;
+                padding: 20px;
+                max-height: 80vh;
+                overflow-y: auto;
             }
         }
     </style>
@@ -588,9 +671,10 @@
         
         // 初始化一些测试数据来演示滚动
         function initTestData() {
-            if (accounts.length === 0) {
+            // 只有在完全没有任何账户数据时才添加测试数据
+            const saved = localStorage.getItem('totp_accounts');
+            if (!saved || saved === '[]' || saved === 'null') {
                 // 添加一些测试分组和数据
-                const testGroups = ['工作', '个人', '社交', '金融', '游戏', '其他', '开发', '测试'];
                 const testAccounts = [
                     {name: 'Google', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
                     {name: 'GitHub', secret: 'JBSWY3DPEHPK3PXP', group: '开发'},
@@ -614,7 +698,7 @@
                     {name: 'QQ', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
                 ];
                 
-                accounts.push(...testAccounts);
+                accounts = testAccounts;
                 saveAccounts();
             }
         }
@@ -688,20 +772,68 @@
         
         function init() {
             loadAccounts();
-            initTestData(); // 初始化测试数据
+            
+            // 只有在没有任何数据时才初始化测试数据
+            if (accounts.length === 0) {
+                initTestData();
+            }
+            
             renderUI();
             startUpdate();
             initResizer();
+            
+            // 移动端优化
+            if (window.innerWidth <= 768) {
+                optimizeForMobile();
+            }
         }
         
+        function optimizeForMobile() {
+            // 确保移动端滚动顺畅
+            document.body.style.webkitOverflowScrolling = 'touch';
+            
+            // 延迟执行以确保DOM完全加载
+            setTimeout(() => {
+                const groupList = document.getElementById('groupList');
+                const accountsContainer = document.querySelector('.accounts-container');
+                
+                if (groupList) {
+                    groupList.style.height = 'calc(100% - 60px)';
+                }
+                if (accountsContainer) {
+                    accountsContainer.style.height = '100%';
+                }
+                
+                // 强制重绘以激活滚动
+                if (groupList && groupList.scrollHeight > groupList.clientHeight) {
+                    groupList.scrollTop = 1;
+                    groupList.scrollTop = 0;
+                }
+                if (accountsContainer && accountsContainer.scrollHeight > accountsContainer.clientHeight) {
+                    accountsContainer.scrollTop = 1;
+                    accountsContainer.scrollTop = 0;
+                }
+            }, 100);
+            
+            // 调整初始分组选择
+            if (accounts.length > 0) {
+                selectGroup('全部');
+            }
+        }
+
         function loadAccounts() {
             const saved = localStorage.getItem('totp_accounts');
             if (saved) {
                 try {
-                    accounts = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    // 确保 accounts 被正确赋值
+                    accounts = Array.isArray(parsed) ? parsed : [];
                 } catch(e) {
+                    console.error('解析本地数据失败:', e);
                     accounts = [];
                 }
+            } else {
+                accounts = [];
             }
         }
         
