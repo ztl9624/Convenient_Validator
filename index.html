@@ -33,11 +33,14 @@
             border-right: 1px solid #374151;
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .sidebar-header {
             padding: 16px;
             border-bottom: 1px solid #374151;
+            flex-shrink: 0;
         }
         
         .sidebar-title {
@@ -51,7 +54,24 @@
         .group-list {
             flex: 1;
             overflow-y: auto;
-            max-height: calc(100vh - 60px);
+            padding: 4px 0;
+        }
+        
+        .group-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .group-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .group-list::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 2px;
+        }
+        
+        .group-list::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
         }
         
         .group-item {
@@ -85,6 +105,7 @@
             width: 4px;
             background: #374151;
             cursor: col-resize;
+            flex-shrink: 0;
         }
         
         .resizer:hover, .resizer.dragging {
@@ -97,6 +118,7 @@
             flex-direction: column;
             min-width: 0;
             height: 100vh;
+            overflow: hidden;
         }
         
         .top-bar {
@@ -222,6 +244,23 @@
             overflow-y: auto;
             padding: 20px;
             min-height: 0;
+        }
+        
+        .accounts-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .accounts-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .accounts-container::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        
+        .accounts-container::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
         }
         
         .card {
@@ -547,6 +586,39 @@
         let editingIndex = -1;
         let codes = {};
         
+        // 初始化一些测试数据来演示滚动
+        function initTestData() {
+            if (accounts.length === 0) {
+                // 添加一些测试分组和数据
+                const testGroups = ['工作', '个人', '社交', '金融', '游戏', '其他', '开发', '测试'];
+                const testAccounts = [
+                    {name: 'Google', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'GitHub', secret: 'JBSWY3DPEHPK3PXP', group: '开发'},
+                    {name: 'Outlook', secret: 'JBSWY3DPEHPK3PXP', group: '个人'},
+                    {name: 'Facebook', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: 'Twitter', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: '银行', secret: 'JBSWY3DPEHPK3PXP', group: '金融'},
+                    {name: '支付宝', secret: 'JBSWY3DPEHPK3PXP', group: '金融'},
+                    {name: 'Steam', secret: 'JBSWY3DPEHPK3PXP', group: '游戏'},
+                    {name: 'Epic Games', secret: 'JBSWY3DPEHPK3PXP', group: '游戏'},
+                    {name: 'AWS', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Azure', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Discord', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: 'Slack', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Trello', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Dropbox', secret: 'JBSWY3DPEHPK3PXP', group: '工作'},
+                    {name: 'Evernote', secret: 'JBSWY3DPEHPK3PXP', group: '个人'},
+                    {name: 'LastPass', secret: 'JBSWY3DPEHPK3PXP', group: '个人'},
+                    {name: 'PayPal', secret: 'JBSWY3DPEHPK3PXP', group: '金融'},
+                    {name: '微信', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                    {name: 'QQ', secret: 'JBSWY3DPEHPK3PXP', group: '社交'},
+                ];
+                
+                accounts.push(...testAccounts);
+                saveAccounts();
+            }
+        }
+        
         // Base32 解码函数
         function base32Decode(base32) {
             const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -580,8 +652,8 @@
                 
                 // 计算时间步长
                 const timeStep = 30;
-                const timestamp = Math.floor(Date.now() / 1000);
-                const counter = Math.floor(timestamp / timeStep) + window;
+                let timestamp = Math.floor(Date.now() / 1000);
+                let counter = Math.floor(timestamp / timeStep) + window;
                 
                 // 将计数器转换为 8 字节数组
                 const counterBytes = new Array(8);
@@ -616,6 +688,7 @@
         
         function init() {
             loadAccounts();
+            initTestData(); // 初始化测试数据
             renderUI();
             startUpdate();
             initResizer();
