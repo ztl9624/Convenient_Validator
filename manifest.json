@@ -1,6 +1,6 @@
 {
-  "name": "验证码管理器 Pro",
-  "short_name": "TOTP Pro",
+  "name": "验证码管理器",
+  "short_name": "验证码管理器",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
